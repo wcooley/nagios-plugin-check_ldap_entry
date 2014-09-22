@@ -59,12 +59,16 @@ my $ldap = Net::LDAP->new($np->opts->host);
 
 $ldap->bind;
 
-for my $filter (@{$np->opts->entry_filter}) {
-    check_ldap_entry($np, $filter);
+if ($np->opts->entry_filter) {
+    for my $filter (@{$np->opts->entry_filter}) {
+        check_ldap_entry($np, $filter);
+    }
 }
 
-for my $filter (@{$np->opts->nonentry_filter}) {
-    check_ldap_entry($np, $filter, 1);
+if ($np->opts->nonentry_filter) {
+    for my $filter (@{$np->opts->nonentry_filter}) {
+        check_ldap_entry($np, $filter, 1);
+    }
 }
 
 $np->nagios_exit($np->check_messages);
