@@ -51,6 +51,7 @@ $np->add_arg(
     spec  => 'nonentry_filter|E=s@',
     label => 'NONENTRY',
     help  => 'LDAP filter for entry which must *not* exist');
+# FIXME add bind, search scope, etc
 
 $np->getopts();
 
@@ -58,46 +59,34 @@ my $ldap = Net::LDAP->new($np->opts->host);
 
 $ldap->bind;
 
-NONENTRY_FILTER:
-for my $filter (@{$np->opts->nonentry_filter}) {
-
-    print "Checking filter '${filter}'\n" if $np->opts->verbose;
-
-    my $result = $ldap->search(base => $np->opts->base, filter  => $filter);
-
-    if ($result->code) {
-        $np->add_message(WARNING, $result->error);
-        # FIXME reinit LDAP object
-        next NONENTRY_FILTER;
-    }
-
-    my $count = $result->count;
-
-    if ($count > 0) {
-        $np->add_message(CRITICAL, "Filter '${filter}' matched $count times");
-    }
-
-}
-
-ENTRY_FILTER:
 for my $filter (@{$np->opts->entry_filter}) {
-
-    print "Checking filter '${filter}'\n" if $np->opts->verbose;
-
-    my $result = $ldap->search(base => $np->opts->base, filter => $filter);
-
-    if ($result->code) {
-        $np->add_message(WARNING, $result->error);
-        # FIXME reinit LDAP object
-        next ENTRY_FILTER;
-    }
-
-    my $count = $result->count;
-
-    if ($count == 0) {
-        $np->add_message(CRITICAL, "Filter '${filter}' matched $count times");
-    }
+    check_ldap_entry($np, $filter);
 }
 
+for my $filter (@{$np->opts->nonentry_filter}) {
+    check_ldap_entry($np, $filter, 1);
+}
 
 $np->nagios_exit($np->check_messages);
+
+sub check_ldap_entry {
+    my ($nagios_plugin, $ldap_filter, $negative_check) = @_;
+
+    print "Checking filter '${ldap_filter}'\n"
+        if $nagios_plugin->opts->verbose;
+
+    my $result = $ldap->search(base => $nagios_plugin->opts->base, filter => $ldap_filter);
+
+    if ($result->code) {
+        $nagios_plugin->add_message(WARNING, $result->error);
+        return;
+    }
+
+    my $count = $result->count;
+
+    my $check_fail = $negative_check ? ($count > 0) : ($count == 0);
+
+    if ($check_fail) {
+        $nagios_plugin->add_message(CRITICAL, "Filter '${ldap_filter}' matched $count times");
+    }
+}
