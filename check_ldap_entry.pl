@@ -44,6 +44,11 @@ $np->add_arg(
     label => 'BASE',
     help  => 'LDAP search base DN');
 $np->add_arg(
+    spec  => 'scope|s=s',
+    label => 'base|one|sub|children',
+    help  => 'LDAP search scope',
+    default => 'sub');
+$np->add_arg(
     spec  => 'entry_filter|e=s@',
     label => 'ENTRY',
     help  => 'LDAP filter for entry which must exist');
@@ -79,7 +84,10 @@ sub check_ldap_entry {
     print "Checking filter '${ldap_filter}'\n"
         if $nagios_plugin->opts->verbose;
 
-    my $result = $ldap->search(base => $nagios_plugin->opts->base, filter => $ldap_filter);
+    my $result = $ldap->search(
+        base    => $nagios_plugin->opts->base,
+        scope   => $nagios_plugin->opts->scope,
+        filter  => $ldap_filter);
 
     if ($result->code) {
         $nagios_plugin->add_message(WARNING, $result->error);
