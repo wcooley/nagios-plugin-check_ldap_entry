@@ -44,6 +44,14 @@ $np->add_arg(
     label => 'BASE',
     help  => 'LDAP search base DN');
 $np->add_arg(
+    spec  => 'bind|D=s',
+    label => 'BINDDN',
+    help  => 'LDAP bind DN (if required)');
+$np->add_arg(
+    spec  => 'pass|P=s',
+    label => 'PASSWORD',
+    help  => 'LDAP bind password (if required)');
+$np->add_arg(
     spec  => 'scope|s=s',
     label => 'base|one|sub|children',
     help  => 'LDAP search scope',
@@ -56,7 +64,6 @@ $np->add_arg(
     spec  => 'nonentry_filter|E=s@',
     label => 'NONENTRY',
     help  => 'LDAP filter for entry which must *not* exist');
-# FIXME add bind, search scope, etc
 
 $np->getopts();
 
@@ -106,7 +113,12 @@ sub init_ldap {
 
     my $ldap = Net::LDAP->new($opts->host);
 
-    $ldap->bind;
+    if ($opts->bind) {
+        $ldap->bind($opts->bind, password => $opts->pass);
+    }
+    else {
+        $ldap->bind();
+    }
 
     return $ldap;
 }
