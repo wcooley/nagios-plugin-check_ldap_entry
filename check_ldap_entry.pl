@@ -61,20 +61,20 @@ $ldap->bind;
 
 if ($np->opts->entry_filter) {
     for my $filter (@{$np->opts->entry_filter}) {
-        check_ldap_entry($np, $filter);
+        check_ldap_entry($np, $ldap, $filter);
     }
 }
 
 if ($np->opts->nonentry_filter) {
     for my $filter (@{$np->opts->nonentry_filter}) {
-        check_ldap_entry($np, $filter, 1);
+        check_ldap_entry($np, $ldap, $filter, 1);
     }
 }
 
 $np->nagios_exit($np->check_messages);
 
 sub check_ldap_entry {
-    my ($nagios_plugin, $ldap_filter, $negative_check) = @_;
+    my ($nagios_plugin, $ldap, $ldap_filter, $negative_check) = @_;
 
     print "Checking filter '${ldap_filter}'\n"
         if $nagios_plugin->opts->verbose;
