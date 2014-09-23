@@ -60,9 +60,7 @@ $np->add_arg(
 
 $np->getopts();
 
-my $ldap = Net::LDAP->new($np->opts->host);
-
-$ldap->bind;
+my $ldap = init_ldap($np->opts);
 
 if ($np->opts->entry_filter) {
     for my $filter (@{$np->opts->entry_filter}) {
@@ -101,4 +99,14 @@ sub check_ldap_entry {
     if ($check_fail) {
         $nagios_plugin->add_message(CRITICAL, "Filter '${ldap_filter}' matched $count times");
     }
+}
+
+sub init_ldap {
+    my ($opts) = @_;
+
+    my $ldap = Net::LDAP->new($opts->host);
+
+    $ldap->bind;
+
+    return $ldap;
 }
