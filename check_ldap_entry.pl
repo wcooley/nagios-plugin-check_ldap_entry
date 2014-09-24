@@ -40,35 +40,24 @@ my $np = Nagios::Plugin->new(
     blurb     => 'Check for presence or absence of particular LDAP entries',
 );
 
-$np->add_arg(
-    spec  => 'host|H=s',
-    label => 'HOSTNAME',
-    help  => 'Host name or IP address of LDAP server or URI');
-$np->add_arg(
-    spec  => 'base|b=s',
-    label => 'BASE',
-    help  => 'LDAP search base DN');
-$np->add_arg(
-    spec  => 'bind|D=s',
-    label => 'BINDDN',
-    help  => 'LDAP bind DN (if required)');
-$np->add_arg(
-    spec  => 'pass|P=s',
-    label => 'PASSWORD',
-    help  => 'LDAP bind password (if required)');
+my @args = (
+    ['host|H=s',             'HOSTNAME', 'Host name or IP address of LDAP server or URI'],
+    ['base|b=s',             'BASE',     'LDAP search base DN'],
+    ['bind|D=s',             'BINDDN',   'LDAP bind DN (if required)'],
+    ['pass|P=s',             'PASSWORD', 'LDAP bind password (if required)'],
+    ['entry_filter|e=s@',    'ENTRY',    'LDAP filter for entry which must exist'],
+    ['nonentry_filter|E=s@', 'NONENTRY', 'LDAP filter for entry which must *not* exist'],
+);
+
+for my $a (@args) {
+    $np->add_arg(spec => $a->[0], label => $a->[1], help => $a->[2]);
+}
+
 $np->add_arg(
     spec  => 'scope|s=s',
     label => 'base|one|sub|children',
     help  => 'LDAP search scope',
     default => 'sub');
-$np->add_arg(
-    spec  => 'entry_filter|e=s@',
-    label => 'ENTRY',
-    help  => 'LDAP filter for entry which must exist');
-$np->add_arg(
-    spec  => 'nonentry_filter|E=s@',
-    label => 'NONENTRY',
-    help  => 'LDAP filter for entry which must *not* exist');
 
 $np->getopts();
 
