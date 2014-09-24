@@ -26,6 +26,11 @@ use Net::LDAP;
 
 my $VERSION = '0.1.0';
 
+use constant {
+    ENSURE_PRESENT => 0,
+    ENSURE_ABSENT  => 1,
+};
+
 my $np = Nagios::Plugin->new(
     usage     => 'Usage: %s -H <host_or_URI> -e <entry_filter> '
                     . '-E <nonentry_filter>',
@@ -71,20 +76,20 @@ my $ldap = init_ldap($np->opts);
 
 if ($np->opts->entry_filter) {
     for my $filter (@{$np->opts->entry_filter}) {
-        check_ldap_entry($np, $ldap, $filter);
+        check_ldap_entry($np, $ldap, $filter, ENSURE_PRESENT);
     }
 }
 
 if ($np->opts->nonentry_filter) {
     for my $filter (@{$np->opts->nonentry_filter}) {
-        check_ldap_entry($np, $ldap, $filter, 1);
+        check_ldap_entry($np, $ldap, $filter, ENSURE_ABSENT);
     }
 }
 
 $np->nagios_exit($np->check_messages);
 
 sub check_ldap_entry {
-    my ($nagios_plugin, $ldap, $ldap_filter, $negative_check) = @_;
+    my ($nagios_plugin, $ldap, $ldap_filter, $ensure_type) = @_;
 
     print "Checking filter '${ldap_filter}'\n"
         if $nagios_plugin->opts->verbose;
@@ -101,7 +106,7 @@ sub check_ldap_entry {
 
     my $count = $result->count;
 
-    my $check_fail = $negative_check ? ($count > 0) : ($count == 0);
+    my $check_fail = $ensure_type ? ($count > 0) : ($count == 0);
 
     if ($check_fail) {
         $nagios_plugin->add_message(CRITICAL, "Filter '${ldap_filter}' matched $count times");
